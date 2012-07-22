@@ -1,10 +1,13 @@
 {
   "name": "test",
   "version": "0.0.0",
-  "main": "index.js",
   "author": "ahomu",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "dependencies": {
+    "express": "3.0.0beta7"
+  },
+  "engines": {
+    "node": "0.8.2",
+    "npm": "1.1.36"
   },
   "license": "MIT"
 }
