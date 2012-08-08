@@ -1,9 +1,11 @@
 {
-  "name": "test",
+  "name": "WebRTC+WebSocket",
   "version": "0.0.0",
   "author": "ahomu",
   "dependencies": {
-    "express": "3.0.0beta7"
+    "express": "3.0.0beta7",
+    "ejs": "~0.8.0",
+    "websocket": "~1.0.6"
   },
   "engines": {
     "node": "0.8.2",
