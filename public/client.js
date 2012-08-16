@@ -12,30 +12,39 @@
     //--------------------------------------------------------------------------
     // peerConnection's function
     function receiveRemoteStream(e) {
-      remoteVideo.src = remoteStream = webkitURL.createObjectURL(e.stream);
+      console.log('receive Remote!');
+      remoteStream = e.stream;
+      remoteVideo.src = webkitURL.createObjectURL(e.stream);
     }
 
-    function signalingCallback(message) {
-      console.log('signaling');
-      console.log(message);
+    function signalingCallback(a, b) {
+      // console.log('signaling');
+      // console.log(a,b);
     }
 
     //--------------------------------------------------------------------------
     // getUserMedia's function
     function receiveLocalStream(stream) {
-      localVideo.src  = localStream = webkitURL.createObjectURL(stream);
-      if (p2p) {
-        p2p.addStream(stream);
-      }
+      localStream = stream;
+      localVideo.src = webkitURL.createObjectURL(stream);
     }
 
     function receiveLocalError() {
       console.log('error');
     }
 
+    //----------------------------------------------------------------------
+    // video
+    localVideo.autoplay = true;
+    nav.webkitGetUserMedia({
+      video: true,
+      audio: true
+    }, receiveLocalStream, receiveLocalError);
+
     //--------------------------------------------------------------------------
     // Connect WebScoket & Enter Room
     enterRoom.addEventListener('submit', function(e) {
+
       //------------------------------------------------------------------------
       // p2p
       var offer, answer;
@@ -47,6 +56,7 @@
       p2p.onopen = function(e) {
         console.log('open!');
       };
+      p2p.addStream(localStream);
 
       //------------------------------------------------------------------------
       // ws
@@ -69,6 +79,8 @@
             callType = dataObj.call,
             data     = dataObj.raw;
 
+        console.log(dataObj);
+
         switch (callType) {
           case 'doOffer' :
             offer = p2p.createOffer({has_audio:true, has_video:true});
@@ -85,17 +97,9 @@
             p2p.startIce();
           break;
           case 'established':
-           p2p.setRemoteDescription(p2p.SDP_ANSWER, new SessionDescription(data.sdp));
+            p2p.setRemoteDescription(p2p.SDP_ANSWER, new SessionDescription(data.sdp));
           break;
         }
-
-        //----------------------------------------------------------------------
-        // Start WebRTC
-        localVideo.autoplay = true;
-        nav.webkitGetUserMedia({
-          video: true,
-          audio: true
-        }, receiveLocalStream, receiveLocalError);
       };
 
       ws.onclose = function(e) {

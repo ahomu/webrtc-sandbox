@@ -32,10 +32,6 @@ app.get('/', function(req, res) {
     res.render('index');
 });
 
-app.get('/test', function(req, res) {
-  res.render('test');
-});
-
 /**
  * WebScoket Server
  */
@@ -52,7 +48,7 @@ ws.on('connect', function(conn) {
   console.log('connect.');
 
   conn.sendMsg = function(call, dataObj) {
-    console.log(call, dataObj)
+    console.log(call);
     conn.sendUTF(JSON.stringify({
       call: call,
       raw : dataObj
@@ -68,7 +64,6 @@ ws.on('connect', function(conn) {
     switch (callType) {
       case 'roomName' :
         room = roomList[data.room] || (roomList[data.room] = []);
-        console.log(room);
         switch (room.length) {
           case 0 :
             conn.sendMsg('doOffer');
@@ -119,13 +114,13 @@ function enterRoom(roomName, conn) {
   return room;
 }
 
-function notifyRoom(roomName, message) {
-  var room = roomList[roomName] || (roomList[roomName] = []);
+// function notifyRoom(roomName, message) {
+//   var room = roomList[roomName] || (roomList[roomName] = []);
 
-  room.forEach(function(conn) {
-    conn.sendUTF(message);
-  });
-}
+//   room.forEach(function(conn) {
+//     conn.sendUTF(message);
+//   });
+// }
 
 /**
  * listen
