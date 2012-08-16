@@ -9,7 +9,9 @@ var express = require('express'),
     ws      = new wsServer({
       httpServer : wsHttp,
       autoAcceptConnections : true
-    });
+    }),
+    roomList = {},
+    sdpList  = {};
 
 /**
  * configure
@@ -30,6 +32,10 @@ app.get('/', function(req, res) {
     res.render('index');
 });
 
+app.get('/test', function(req, res) {
+  res.render('test');
+});
+
 /**
  * WebScoket Server
  */
@@ -42,26 +48,84 @@ app.get('/', function(req, res) {
 //   request.accept(null, null);
 // });
  
-ws.on('connect', function(connection) {
+ws.on('connect', function(conn) {
   console.log('connect.');
-  connection.sendUTF('connect succeed!');
 
-  connection.on('message', function(message) {
-    if (message.type === 'utf8') {
-        console.log('Received Message: ' + message.utf8Data);
-        connection.sendUTF(message.utf8Data);
-    }
-    else if (message.type === 'binary') {
-        console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
-        connection.sendBytes(message.binaryData);
+  conn.sendMsg = function(call, dataObj) {
+    console.log(call, dataObj)
+    conn.sendUTF(JSON.stringify({
+      call: call,
+      raw : dataObj
+    }));
+  };
+
+  conn.on('message', function(message) {
+    var dataObj  = JSON.parse(message.utf8Data),
+        callType = dataObj.call,
+        data     = dataObj.raw,
+        room;
+
+    switch (callType) {
+      case 'roomName' :
+        room = roomList[data.room] || (roomList[data.room] = []);
+        console.log(room);
+        switch (room.length) {
+          case 0 :
+            conn.sendMsg('doOffer');
+          break;
+          case 1 :
+            conn.sendMsg('doAnswer', {sdp: getSDP(room[0])});
+          break;
+          default :
+            // if is full room force empty and new offering.
+            roomList[data.room] = [];
+            conn.sendMsg('doOffer');
+          break;
+        }
+      break;
+      case 'offer' :
+        room = enterRoom(data.room, conn);
+        setSDP(conn, data.sdp);
+      break;
+      case 'answer' :
+        room = enterRoom(data.room, conn);
+        room[0].sendMsg('established', {sdp: data.sdp});
+      break;
     }
   });
 
-  connection.on('close', function(reasonCode, description) {
+  conn.on('close', function(reasonCode, description) {
     console.log(reasonCode);
     console.log(description);
   });
 });
+
+/**
+ * Room Action
+ */
+function setSDP(conn, sdp) {
+  sdpList[conn] = sdp;
+}
+
+function getSDP(conn) {
+  return sdpList[conn];
+}
+
+function enterRoom(roomName, conn) {
+  var room = roomList[roomName] || (roomList[roomName] = []);
+
+  room.push(conn);
+
+  return room;
+}
+
+function notifyRoom(roomName, message) {
+  var room = roomList[roomName] || (roomList[roomName] = []);
+
+  room.forEach(function(conn) {
+    conn.sendUTF(message);
+  });
+}
 
 /**
  * listen

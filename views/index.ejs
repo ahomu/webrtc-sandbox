@@ -8,8 +8,18 @@
 
 <h1>WebRTCテスト</h1>
 
-<button id="startCamera">カメラを起動しますよ</button>
+<form id="enterRoom">
+  <input type="text" name="roomName" value="test" />
+  <input type="submit" name="enterRoom" value="ルームに入ります" />
+</form>
 
-<video id="output"></video>
+<!-- <button id="startCamera">カメラを起動しますよ</button> -->
+
+<h2>Local Video</h2>
+<video id="localVideo"></video>
+
+<h2>Remote Video</h2>
+<video id="remoteVideo"></video>
+
 </body>
 </html>
